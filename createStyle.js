@@ -24,7 +24,6 @@ module.exports = {
 
 function createStyleRenderer (options) {
   const {
-    fontNode: userFontNode,
     plugins: userPlugins = [],
     enhancers: userEnhancers = [],
     setup = noop,
@@ -33,21 +32,19 @@ function createStyleRenderer (options) {
     selectorPrefix
   } = options
 
-  const fontNode = typeof userFontNode === 'string'
-    ? document.querySelector(userFontNode)
-    : userFontNode
+  // plugin order matters!
+  //   https://github.com/rofrischmann/fela/blob/master/docs/advanced/Plugins.md#order-matters
 
-  var defaultPlugins = [fallbackValue(), lvha()]
+  var defaultPlugins = []
   var defaultEnhancers = []
 
   if (dev) {
-    defaultPlugins.push(validator())
-    defaultEnhancers.push(beautifier())
-    defaultEnhancers.push(monolithic())
+    defaultPlugins = [lvha(), fallbackValue(), validator()]
+    defaultEnhancers = [beautifier(), monolithic()]
   }
 
   if (prod) {
-    defaultPlugins.push(prefixer())
+    defaultPlugins = [lvha(), prefixer(), fallbackValue()]
   }
 
   const plugins = [...defaultPlugins, ...userPlugins]
@@ -67,7 +64,6 @@ function createStyleRenderer (options) {
 function StyleProvider (options) {
   const {
     renderer,
-    mountNode,
     theme,
     children
   } = options
@@ -76,8 +72,7 @@ function StyleProvider (options) {
 
   return (
     h(FelaProvider, {
-      renderer,
-      mountNode
+      renderer
     }, [
       h(FelaThemeProvider, {
         theme
@@ -95,7 +90,6 @@ StyleProvider.defaultProps = {
 }
 StyleProvider.propTypes = {
   renderer: PropTypes.object,
-  mountNode: PropTypes.object,
   theme: PropTypes.object,
   children: PropTypes.node.isRequired
 }
